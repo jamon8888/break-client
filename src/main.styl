@@ -1,0 +1,137 @@
+// Helper functions
+
+vendor(prop, args)
+  -webkit-{prop} args
+  -moz-{prop} args
+  {prop} args
+
+round(n)
+  vendor border-radius, n
+
+round-corner(tb, lr, n)
+  border-{tb}\-{lr}-radius n
+  -moz-border-radius-{tb}{lr} n
+
+box-shadow()
+  vendor box-shadow, arguments
+
+opacity(n)
+  opacity n
+  -moz-opacity n
+
+vertical-gradient(from, to)
+  background-color to
+  background-image -webkit-gradient(linear, left top, left bottom, from(from), to(to))
+  background-image -moz-linear-gradient(top, from, to)
+
+
+// Style
+ol, ul
+  list-style: none
+a
+  text-decoration: none
+  color: black
+
+body
+  line-height: 1
+  //font: 1em Helvetica, sans-serif
+  font-family: Trebuchet MS
+  padding:4px
+
+h1
+  font-size: 1.8em
+  margin-top:0
+
+#header
+  background: none repeat scroll 0 0 #222222
+  color: #FFFFFF
+  height: 4em
+  width: 100%
+  top: 0
+  > .inner
+    padding: .1em 0
+
+#footer
+  background: none repeat scroll 0 0 #222222
+  color: #FFFFFF
+  width: 100%
+  bottom: 0
+
+#map
+  z-index: 0
+
+#home
+  display: block
+
+.content
+  height: 100%
+  width: 100%
+#page
+  z-index: 0
+  margin: 4em 0 7em
+  padding: 0
+  height: 100%
+  > .inner
+    height: 100%
+    width: 100%
+
+.venue
+  margin: .3em 0
+  > .inner
+    padding: 1em
+    background: #f2f2f2
+
+.bar
+  font-weight: bold
+  left: 0
+  position: fixed
+  text-align: center
+  width: 100%
+
+#navbar
+  z-index: 1000
+  color: #EEE
+  a
+    color: #FFF
+  ul
+    > li.active
+      background: #FF4400
+      box-shadow(inset 0px -5px 4px #000)
+    > li.active:hover
+      background: #FF4400
+      box-shadow(inset 0px -5px 4px #000)
+    li
+      cursor: pointer
+      background: #222
+      float: left
+      width: 33%
+      > .inner
+        padding: 1em 0
+      ul
+        display: none
+        position: absolute
+        width: 100%
+        left: 0
+        top: -3em
+        li
+          float: left
+          background: #FF4400
+          a
+            display: block
+        li:hover
+          background: #FF6600
+    > li:hover
+      background: #333
+      color: #FFF
+    ul#events-menu
+      li
+        padding: 0
+        width: 25%
+        a
+          padding: 1em 0
+    ul#map-menu
+      li
+        padding: 0
+        width: 50%
+        a
+          padding: 1em 0

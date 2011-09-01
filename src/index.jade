@@ -1,0 +1,71 @@
+!!! 5
+html
+  head
+    title Break
+    meta(name='viewport', content='width=device-width; initial-scale=1.0; user-scalable=no')
+    meta(http-equiv='Content-type', content='text/html; charset=utf-8')
+    link(rel='stylesheet', href='http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.css')
+    link(rel='stylesheet', href='css/leaflet.css', type='text/css')
+    link(rel='stylesheet', href='css/grid.css', type='text/css')
+    link(rel='stylesheet', href='css/less.css', type='text/css')
+    link(rel='stylesheet', href='css/main.css', type='text/css')
+    script(type='text/javascript', charset='utf-8')
+            function onBodyLoad(){
+              document.addEventListener("deviceready",onDeviceReady,false);
+              // Call jquery.ready() for symbian devices that don't seem to trigger it
+              jQuery.ready();
+            }
+            function onDeviceReady(){
+            }
+
+  body(onload='onBodyLoad()')
+    // Jquery Mobile
+    header#header.bar
+      .inner
+        h1 Break'n Art
+    #page
+      .inner
+    footer#footer.bar
+      .inner
+        #navbar
+          ul
+            //<li><a href="a.html" class="ui-btn-active"><img src="images/heart.png" />Favorites</a></li>
+            li#nav-favorites.button
+              .inner
+                img(src='images/heart.png')
+                .label A L'affiche
+            li#nav-events.button
+              .inner
+                img(src='images/calendar.png')
+                .label Evennements
+              ul#events-menu.menu
+                li: a(href='#events/date') Date
+                li: a(href='#events/zone') Arrondissement
+                li: a(href='#events/category') Categorie
+                li: a(href='#events/search') Pres de moi
+        // /navbar
+      // /footer
+    // /page
+    // Jquery Templates
+
+    script#template-home(type='text/template')
+      .inner
+        .title {{title}}
+        .address {{title}}
+    script#template-venue(type='text/template')
+      .inner
+        .title {{title}}
+        .address {{address}}
+        .text {{text.fr}}
+
+
+  script(type='text/javascript', src='/_utils/script/sha1.js')
+  script(src='http://code.jquery.com/jquery-1.6.1.min.js')
+  script(type='text/javascript', src='js/underscore.js')
+  script(type='text/javascript', src='js/backbone.js')
+  script(type='text/javascript', src='js/jquery.couch.js')
+  script(type='text/javascript', src='js/backbone-couchdb.js')
+  script(type='text/javascript', src='js/leaflet.js')
+  script(type='text/javascript', src='js/app.js')
+  script(type='text/javascript', charset='utf-8')
+

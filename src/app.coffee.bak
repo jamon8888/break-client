@@ -1,0 +1,388 @@
+#test _.memoize for _.templates
+
+#
+# Helper Methods
+#
+
+#Backbone.couch_connector.config.db_name = "break"
+#Backbone.couch_connector.config.ddoc_name = "break"
+#Backbone.couch_connector.config.view_name = "collection"
+#Backbone.couch_connector.config.global_changes = false
+_.templateSettings = interpolate: /\{\{(.+?)\}\}/g
+
+$.mobile.ajaxEnabled = false
+$.mobile.hashListeningEnabled = false
+#
+# Main App
+#
+
+app =
+  activePage: ->
+    $(".ui-page-active")
+
+  reapplyStyles: (el) ->
+    el.find('ul[data-role]').listview()
+    el.find('div[data-role="fieldcontain"]').fieldcontain()
+    el.find('button[data-role="button"]').button()
+    el.find('input,textarea').textinput()
+    el.page()
+
+  redirectTo: (page) ->
+    $.mobile.changePage page
+
+  goBack: ->
+    $.historyBack()
+
+
+#
+# Venue Model
+#
+
+class Venue extends Backbone.Model
+  type: 'venue',
+  url: => '/venues/' + @get('id')
+  defaults:
+    type: 'venue'
+    created: new Date().getTime()
+    updated: new Date().getTime()
+    uuid: null
+    status: 0
+    title: null
+    text:
+      fr: null
+      en: null
+    images: null
+    links: null
+    location: null
+    email: null
+    address: null
+    website: null
+    category: null
+  tags: []
+  artists: []
+  getUrl: ->
+    @url
+  getType: ->
+    @get('type')
+  getTitle: ->
+    @get('title')
+  getText: (lang) ->
+    text = @get('text')
+    if lang then return text[lang]
+    else return text
+  getLocation: ->
+    @get('location')
+  getEmail: ->
+    @get('email')
+  getAddress: ->
+    @get('address')
+  getWebsite: ->
+    @get('website')
+  getCreated: ->
+    #TODO
+    new Date(@get('date'))
+  getUpdated: ->
+    #TODO
+    new Date(@get('date'))
+  getStatus: ->
+    @get('status')
+  getImages: (num) ->
+    images = @get('images')
+    if num then return _.first(images, num)
+    else return _.first(images)
+  getLinks: (num) ->
+    links = @get('links')
+    if num then return _.first(links, num)
+    else return _.first(links)
+  getCategory: ->
+    @get('category')
+  getTags: ->
+    _.pluck(@tags, 'title')
+  getEvents: ->
+    _.pluck(@venues, 'title')
+
+#
+# Event Model
+#
+
+class Event extends Backbone.Model
+  type: 'event'
+  url: => '/events/' + @get('id')
+  defaults:
+    type: 'event'
+    created: new Date().getTime()
+    updated: new Date().getTime()
+    status: 0
+    title: null
+    text:
+      fr: null
+      en: null
+    date: null
+    images: null
+    links: null
+    category: null
+  tags: []
+  venues: []
+  getUrl: ->
+    @url
+  getType: ->
+    @get('type')
+  getTitle: ->
+    @get('title')
+  getText: (lang) ->
+    text = @get('text')
+    if lang then return text[lang]
+    else return text
+  getCreated: ->
+    #TODO
+    new Date(@get('date'))
+  getUpdated: ->
+    #TODO
+    new Date(@get('date'))
+  getStatus: ->
+    @get('status')
+  getImages: (num) ->
+    images = @get('images')
+    if num then return _.first(images, num)
+    else return _.first(images)
+  getLinks: (num) ->
+    links = @get('links')
+    if num then return _.first(links, num)
+    else return _.first(links)
+  getCategory: ->
+    @get('category')
+  getTags: ->
+    _.pluck(@tags, 'title')
+  getVenues: ->
+    _.pluck(@venues, 'title')
+
+#
+# Venue Collection
+#
+
+class Venues extends Backbone.Collection
+  type: 'venues'
+  model: Venue
+  url: '/venues'
+  db:
+    view: "messages"
+    changes: true
+    filter: Backbone.couch_connector.config.ddoc_name + "/messages"
+  comparator: (comment) ->
+    comment.get "date"
+
+#
+# Event Collection
+#
+
+class Events extends Backbone.Collection
+  type: 'events'
+  model: Event
+  url: '/events'
+
+
+#
+# Venue View
+#
+
+class VenueView extends Backbone.View
+  constructor: ->
+    super
+
+    # Get the active page from jquery mobile. We need to keep track of what this
+    # dom element is so that we can refresh the page when the page is no longer active.
+    @el = app.activePage()
+
+    @template = _.template('''
+      <div>
+
+        <p>
+          <img style="width: 100%" src="<%= venue.getMapUrl() %>" />
+        </p>
+
+        <address>
+          <%= venue.getAddress() %>
+        </address>
+
+        <ul data-role="listview" data-inset="true">
+          <li data-role="list-divider">Actions</li>
+          <li><a rel="external" href="openmap:q=<%= encodeURIComponent(venue.getAddress) %>">Open Map</li>
+          <li><a href="#venues-<%= venue.cid %>-edit">Edit</a></li>
+        </ul>
+      </div>
+    ''')
+
+    # Watch for changes to the model and redraw the view
+    @model.bind 'change', @render
+
+    # Draw the view
+    @render()
+
+  render: =>
+    # Set the name of the page
+    @el.find('h1').text(@model.getName())
+
+    # Render the content
+    @el.find('.ui-content').html(@template({venue : @model}))
+
+    # A hacky way of reapplying the jquery mobile styles
+    app.reapplyStyles(@el)
+
+#
+# Home View
+#
+
+class HomeView extends Backbone.View
+  constructor: ->
+    super
+
+    @el = app.activePage()
+
+    @template = _.template('''
+      <div>
+
+      <ul data-role="listview" data-theme="c" data-filter="true">
+        <% venues.each(function(venue){ %>
+          <li><a href="#venues-<%= venue.cid %>"><%= venue.getName() %></a></li>
+        <% }); %>
+      </ul>
+
+      </div>
+    ''')
+
+    @render()
+
+  render: =>
+    # Render the content
+    @el.find('.ui-content').html(@template({venues : Venues}))
+
+    # A hacky way of reapplying the jquery mobile styles
+    app.reapplyStyles(@el)
+
+#
+# Controller
+#
+
+class HomeController extends Backbone.Controller
+  routes :
+    "venues-:cid-edit" : "edit"
+    "venues-:cid" : "show"
+    "home"  : "home"
+
+  constructor: ->
+    super
+    @_views = {}
+
+  home : ->
+    @_views['home'] ||= new HomeView
+
+  show: (cid) ->
+    @_views["venues-#{cid}"] ||= new ShowVenueView { model : Venues.getByCid(cid) }
+
+  edit: (cid) ->
+    @_views["venues-#{cid}-edit"] ||= new EditVenueView { model : Venues.getByCid(cid) }
+
+app.homeController = new HomeController()
+
+
+
+
+
+
+
+onLocationFound = (e) ->
+  radius = e.accuracy / 2
+  marker = new L.Marker(e.latlng)
+  map.addLayer(marker)
+  marker.bindPopup("You are within " + radius + " meters from this point").openPopup()
+  circle = new L.Circle(e.latlng, radius)
+  map.addLayer(circle)
+
+onLocationError = (e) ->
+  alert(e.message)
+
+initMap = (e) ->
+  map = new L.Map('map')
+  #cloudmadeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/31408/256/{z}/{x}/{y}.png'
+  cloudmadeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
+  cloudmadeAttribution = 'Map data © 2011 OpenStreetMap contributors, Imagery © 2011 CloudMade'
+  cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttribution})
+  map.addLayer(cloudmade)
+  map.locateAndSetView(26)
+  map.on('locationfound', onLocationFound)
+  map.on('locationerror', onLocationError)
+  MyIcon = L.Icon.extend
+    iconUrl: 'http://leaflet.cloudmade.com/dist/images/marker.png',
+  icon = new MyIcon()
+
+
+#
+# Start the app
+#
+
+$(document).ready ->
+  Backbone.history.start()
+  app.homeController.home()
+  venues = new Venues
+  events = new Events
+  console.log('couch',$.couch)
+    ##SS.server.app.readGeo (data) ->
+    #counter = 0
+    #marker = []
+    #_.each data, (d) ->
+      ##if d[2] is not null and d[3] is not null
+      #lon = Number(d[2])
+      #markerLocation = new L.LatLng(d[3], lon)
+      #marker[counter] = new L.Marker(markerLocation, {icon: icon})
+      #marker[counter].bindPopup(d[1])
+      #map.addLayer(marker[counter])
+      #counter++
+
+#
+#Bootstrapping
+#
+@app = app
+
+class Calendar extends Backbone.Collection
+  type: 'calendar'
+  model: Events
+  url: '/calendar'
+  db:
+    view: 'date'
+    #start_key: '2005-01-06T11:00:00.000'
+    #start_key: '2006-01-06T11:00:00.000'
+
+calendar = new Calendar
+calendar.fetch()
+console.log('calenar', calendar)
+Class CalendarView extends Backbone.View
+  constructor: ->
+    super
+    @el = app.activePage()
+    # Watch for changes to the model and redraw the view
+    @model.bind 'change', @render
+
+    # Draw the view
+    @render()
+
+  render: =>
+    # Set the name of the page
+    @el.find('h1').text(@model.getName())
+
+    # Render the content
+    @el.find('.ui-content').html(@template({venue : @model}))
+
+    # A hacky way of reapplying the jquery mobile styles
+    app.reapplyStyles(@el)
+
+
+
+#App = Backbone.Router.extend(initialize: ->
+  #UserList.fetch()
+#)
+
+#filters:
+  #by kewords
+  #by category
+  #by tag?
+  #by venue

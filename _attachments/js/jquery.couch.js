@@ -118,7 +118,7 @@
         }
       }
       if (value === null) {
-        req.type = "DELETE";        
+        req.type = "DELETE";
       } else if (value !== undefined) {
         req.type = "PUT";
         req.data = toJSON(value);
@@ -130,7 +130,7 @@
         "An error occurred retrieving/updating the server configuration"
       );
     },
-    
+
     /**
      * Returns the session information for the currently logged in user.
      * @param {ajaxSettings} options
@@ -180,7 +180,7 @@
      * <a href="http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings">
       * jQuery ajax settings</a>
      */
-    signup: function(user_doc, password, options) {      
+    signup: function(user_doc, password, options) {
       options = options || {};
       // prepare user doc based on name and password
       user_doc = this.prepareUserDoc(user_doc, password);
@@ -917,7 +917,7 @@
          */
         setDbProperty: function(propName, propValue, options, ajaxOptions) {
           ajax({
-            type: "PUT", 
+            type: "PUT",
             url: this.uri + propName + encodeOptions(options),
             data : JSON.stringify(propValue)
           },
@@ -929,7 +929,7 @@
       };
     },
 
-    encodeDocId: encodeDocId, 
+    encodeDocId: encodeDocId,
 
     /**
      * Accessing the root of a CouchDB instance returns meta information about
