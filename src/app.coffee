@@ -1,21 +1,21 @@
-#test _.memoize for _.templates
-log = (a) -> console.log(a)
+#----------------#
+# Break Couchapp #
+#----------------#
 
-#
-# Helper Methods
-#
-
+#backbone connector
 Backbone.couch_connector.config.db_name = "break"
 Backbone.couch_connector.config.ddoc_name = "couchbreak"
 Backbone.couch_connector.config.view_name = "collection"
 Backbone.couch_connector.config.global_changes = false
+#mustache-like templating
 _.templateSettings = interpolate: /\{\{(.+?)\}\}/g
-#$.mobile.ajaxEnabled = false
-#$.mobile.hashListeningEnabled = false
+
 #
 # Main App
+# TODO - remove jquery mobile stuff
 #
 
+#this should hold some utility/state methods
 app =
   activePage: ->
     $(".ui-page-active")
@@ -34,7 +34,6 @@ app =
   goBack: ->
     log('1')
     #$.historyBack()
-
 
 #
 # Venue Model
@@ -61,7 +60,6 @@ class Venue extends Backbone.Model
     website: null
     category: null
   tags: []
-  artists: []
   getUrl: ->
     @url
   getType: ->
@@ -81,10 +79,10 @@ class Venue extends Backbone.Model
   getWebsite: ->
     @get('website')
   getCreated: ->
-    #TODO
+    # TODO - check if it works
     new Date(@get('date'))
   getUpdated: ->
-    #TODO
+    # TODO - check if it works
     new Date(@get('date'))
   getStatus: ->
     @get('status')
@@ -136,10 +134,10 @@ class Event extends Backbone.Model
     if lang then return text[lang]
     else return text
   getCreated: ->
-    #TODO
+    # TODO - check if it works
     new Date(@get('date'))
   getUpdated: ->
-    #TODO
+    # TODO - check if it works
     new Date(@get('date'))
   getStatus: ->
     @get('status')
@@ -166,10 +164,11 @@ class Venues extends Backbone.Collection
   type: 'venues'
   model: Venue
   url: '/venues'
+  # TODO - since backbone-couchdb has been hacked, work on the db property
   #db:
-    #view: "messages"
+    #view: "venues"
     #changes: false
-    #filter: Backbone.couch_connector.config.ddoc_name + "/messages"
+    #filter: Backbone.couch_connector.config.ddoc_name + "/venues"
   #comparator: (comment) ->
     #comment.get "date"
 
@@ -181,7 +180,9 @@ class Events extends Backbone.Collection
   type: 'events'
   model: Event
   url: '/events'
+  # TODO - Same as above
 
+# TODO - Remove, as this is a test
 class VenuesNearby extends Venues
   db:
     view: 'location'
@@ -194,6 +195,7 @@ class VenuesNearby extends Venues
     #group_level: null
     #include_docs: null
 
+# TODO - Remove, as this is a test
 class VenuesHere extends VenuesNearby
   type: 'venuesHere'
   initialize: ->
@@ -202,39 +204,25 @@ class VenuesHere extends VenuesNearby
     @db.endkey = 'gzwzzzzzz'
     @db.include_docs = true
 
-
 #
 # Venue View
 #
 
 class VenueView extends Backbone.View
+# TODO - Work on this
 
 #
 # Base View
+# - used mainly for global jquery bindings
 #
 
 class BaseView extends Backbone.View
   el: 'body'
   initialize: ->
     @render()
-  #events:
-    #'click #favorites' : 'clickFavorites'
-    #'click #events' : 'clickEvents'
-    #'click #map' : 'clickMap'
-  #clickFavorites: (e) ->
-    #console.log(e)
-  #clickEvents: (e) ->
-    #console.log(e)
-  #clickMap: (e) ->
-    #console.log(e)
 
   render: ->
-    #$('#favorites').bind 'click', ->
-    #$('#events').click (e) ->
-      #$('ul', e).show()
-    #$('#map').click (e) ->
-      #$('ul', e).show()
-
+    #bind click/touch events to the main buttons
     $('li#nav-map > .inner').bind 'click touchstart', ->
       $('#navbar .button').removeClass('active')
       $(@).parent().addClass('active')
@@ -246,12 +234,13 @@ class BaseView extends Backbone.View
     $('li#nav-events > .inner').bind 'click touchstart', ->
       $('#navbar .button').removeClass('active')
       $(@).parent().toggleClass('active')
+      #toggle open the submenu
       $('ul#events-menu').toggle()
+    #remove active class and hide submenus when clicking on another button
     $('#navbar .menu li').bind 'click touchstart', ->
       $('#navbar .button').removeClass('active')
       parent = $(@).parent()
       parent.hide()
-
 
 #
 # Home View
@@ -262,6 +251,7 @@ class HomeView extends Backbone.View
   className: 'content'
   template : _.template($("#template-home").html()),
   initialize: ->
+    # TODO - remove this test
     @venues = new VenuesHere
     @venues.fetch success: (collection) =>
       @_mainView = new List
@@ -305,6 +295,7 @@ class HomeView extends Backbone.View
 
 #
 # List
+# - generic list
 #
 
 class List extends Backbone.View
@@ -323,6 +314,7 @@ class List extends Backbone.View
     @collection.bind "add", @add
     @collection.bind "remove", @remove
 
+  # TODO - remove? shouldn't be necessary as the app won't be dynamic
   add: (model) ->
     childView = new @_childConstructor
       tagName: @_childTag
@@ -332,6 +324,7 @@ class List extends Backbone.View
     @_childViews.push childView
     $(@el).append childView.render().el if @_rendered
 
+  # TODO - remove? shouldn't be necessary as the app won't be dynamic
   remove: (model) ->
     viewToRemove = _(@_childViews).select((cv) ->
       cv.model == model
@@ -340,12 +333,21 @@ class List extends Backbone.View
     $(viewToRemove.el).remove()  if @_rendered
 
   render: ->
-    that = @
+    #that = @
+    $el = $(@el)
     @_rendered = true
-    $(@el).empty()
-    _(@_childViews).each (childView) ->
-      $(that.el).append childView.render().el
+    $el.empty()
+    #TODO - should be consistent with 'for .. in' instead of _.each (faster benchmarks)
+    for view in @_childViews
+      $el.append view.render().el
+    #_(@_childViews).each (childView) ->
+      #$(that.el).append childView.render().el
     @
+
+#
+# Element
+# - single element in a list
+#
 
 class Element extends Backbone.View
   initialize: (options) ->
@@ -353,10 +355,14 @@ class Element extends Backbone.View
 
   render: ->
     content = @model.toJSON()
-    console.log('content',content)
+    #console.log('content',content)
     $el = $(@el)
     $el.html(@template(content))
     @
+
+#
+# Map View
+#
 
 class MapView extends Backbone.View
   id: 'map'
@@ -384,10 +390,11 @@ class MapView extends Backbone.View
 
   initMap = (e) ->
     map = new L.Map('map')
-    #cloudmadeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/31408/256/{z}/{x}/{y}.png'
+    # TODO - API key doesn't work, had to steal cloudmade's demo api key
     cloudmadeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
     #cloudmadeUrl = 'http://{s}.tile.cloudmade.com/09e55b617c6847a8b0bf6b769749217b/997/256/{z}/{x}/{y}.png'
 
+    #Leaflet demo code
     cloudmadeAttribution = 'Map data © 2011 OpenStreetMap contributors, Imagery © 2011 CloudMade'
     cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttribution})
     paris = new L.LatLng(48.8566,2.3508); #// geographical point (longitude and latitude)
@@ -399,115 +406,11 @@ class MapView extends Backbone.View
     MyIcon = L.Icon.extend
       iconUrl: 'http://leaflet.cloudmade.com/dist/images/marker.png',
     icon = new MyIcon()
-#class GenericList extends Backbone.View
-  #initialize: (options) ->
-    #_(this).bindAll "add", "remove"
-    #throw "no child view constructor provided" unless options.childViewConstructor
-    #throw "no child view tag name provided" unless options.childViewTagName
-    #@_childConstructor = options.childConstructor
-    #@_childTag = options.childTag
-    #@_childViews = []
-    #@collection.each @add
-    #@collection.bind "add", @add
-    #@collection.bind "remove", @remove
-
-  #add: (model) ->
-    #childView = new @_childConstructor
-      #tagName: @_childTag
-      #model: model
-    #@_childViews.push childView
-    #$(@el).append childView.render().el if @_rendered
-    ##console.log(@)
-
-  #remove: (model) ->
-    #viewToRemove = _(@_childViews).select((cv) ->
-      #cv.model == model
-    #)[0]
-    #@_childViews = _(@_childViews).without(viewToRemove)
-    #$(viewToRemove.el).remove()  if @_rendered
-
-  #render: ->
-    #that = @
-    #@_rendered = true
-    #$(@el).empty()
-    #_(@_childViews).each (childView) ->
-      #$(that.el).append childView.render().el
-    ##console.log(@)
-    #@
-#
-# Router
-#
-
-class Router extends Backbone.Router
-  routes :
-    "home"  : "home"
-    "map"  : "map"
-    "favorites"  : "favorites"
-    "events"  : "events"
-    "search"  : "search"
-
-  constructor: ->
-    super
-    @_views = {}
-
-  base : ->
-    @_views['base'] ||= new BaseView
-
-  home : ->
-    console.log('a')
-    @_views['home'] ||= new HomeView
-
-  favorites : ->
-    console.log('a')
-    #@_views['favorites'] ||= new FavoritesView
-
-  events: ->
-    console.log('a')
-    #@_views['events'] ||= new EventsView
-
-  map : ->
-    console.log('mapa')
-    @_views['map'] ||= new MapView
-
-  search : ->
-    console.log('a')
-    #@_views['search'] ||= new SearchView
-
-
-app.router = new Router()
-
-
-
-
-
 
 #
-# Start the app
+# Calendar View
+# TODO - not sure what this was for
 #
-
-$(document).ready ->
-  Backbone.history.start()
-  app.router.base()
-  app.router.home()
-  venues = new Venues
-  events = new Events
-  console.log(Backbone.couch_connector)
-    ##SS.server.app.readGeo (data) ->
-    #counter = 0
-    #marker = []
-    #_.each data, (d) ->
-      ##if d[2] is not null and d[3] is not null
-      #lon = Number(d[2])
-      #markerLocation = new L.LatLng(d[3], lon)
-      #marker[counter] = new L.Marker(markerLocation, {icon: icon})
-      #marker[counter].bindPopup(d[1])
-      #map.addLayer(marker[counter])
-      #counter++
-
-#
-#Bootstrapping
-#
-@app = app
 
 class Calendar extends Backbone.Collection
   type: 'calendar'
@@ -538,14 +441,80 @@ class CalendarView extends Backbone.View
     # Render the content
     @el.find('.ui-content').html(@template({venue : @model}))
 
-    # A hacky way of reapplying the jquery mobile styles
-    app.reapplyStyles(@el)
+#
+# Router
+#
+
+class Router extends Backbone.Router
+  routes :
+    "home"  : "home"
+    "map"  : "map"
+    "favorites"  : "favorites"
+    "events"  : "events"
+    "search"  : "search"
+
+  constructor: ->
+    super
+    @_views = {}
+
+  base : ->
+    @_views['base'] ||= new BaseView
+
+  home : ->
+    console.log('home')
+    @_views['home'] ||= new HomeView
+
+  favorites : ->
+    console.log('favorites')
+    #@_views['favorites'] ||= new FavoritesView
+
+  events: ->
+    console.log('events')
+    #@_views['events'] ||= new EventsView
+
+  map : ->
+    console.log('map')
+    @_views['map'] ||= new MapView
+
+  search : ->
+    console.log('search')
+    #@_views['search'] ||= new SearchView
 
 
+app.router = new Router()
 
-#App = Backbone.Router.extend(initialize: ->
-  #UserList.fetch()
-#)
+#
+# Bootstrap
+#
+
+$(document).ready ->
+  Backbone.history.start()
+  #fire base view
+  app.router.base()
+  #fire home view
+  app.router.home()
+  #initialize collections
+  venues = new Venues
+  events = new Events
+
+    ##SS.server.app.readGeo (data) ->
+    #counter = 0
+    #marker = []
+    #_.each data, (d) ->
+      ##if d[2] is not null and d[3] is not null
+      #lon = Number(d[2])
+      #markerLocation = new L.LatLng(d[3], lon)
+      #marker[counter] = new L.Marker(markerLocation, {icon: icon})
+      #marker[counter].bindPopup(d[1])
+      #map.addLayer(marker[counter])
+      #counter++
+
+#globalize app
+@app = window.app = app
+
+#
+# TODO
+#
 
 #filters:
   #by kewords
